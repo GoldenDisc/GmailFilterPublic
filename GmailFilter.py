@@ -12,15 +12,13 @@ from google.auth.transport.requests import Request
 
 # Setting up lists/collections
 
-spam_list = ["<noreply@youtube.com>", "<noreply@redditmail.com>", "<no-reply@customers.instacartemail.com>", "<reply@mail.familysearch.org>",
-             "<hello@marketing.us.rosettastone.com>", "<news@app.postmates.com>", "<7-eleven@mail.7-eleven.com>", "<BestBuyInfo@emailinfo.bestbuy.com>",
-             "<service@customink.com>", "<hello@skillshare.com", "<Starbucks@e.starbucks.com>", "<no-reply@twitch.tv>"]
+spam_list = ["<The addresses of Emails you want to archive>"]
 
-spam_name = ["youtube", ]
+spam_name = ["<The names of the Emails you want to archive>"]
 
-star_list = ["<nenapinklestein@gmail.com>", "<lexianne@gmail.com>", "<radix42@gmail.com>", "tarider43@gmail.com", ]
+star_list = ["<The adresses of the Emails you want to star>"]
 
-star_name = ["lexi", ]
+star_name = ["<The names of the Emails you want to star>"]
 
 spam_class = []
 
