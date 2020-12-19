@@ -21,3 +21,27 @@ Keep in mind that this filter is a simple project, and is still in the works. It
 - Improved code readability.
 
 - Released publically.
+
+
+========== - Version 1.2 - Added Logging and Naming Scheme ==========
+
+- Added a naming scheme for objects created in the program according to the following list:
+
+Lists: lowercase_with_underscores
+
+Dicts: lowercase_with_underscores + Dict
+
+Strings: initially-Lowercase-With-Hypens
+
+Classes: Capitalized
+
+Funcs: initiallyLowercase + Func
+
+
+- Added logging for errors, using the Error.log file.
+
+- Added the 'Error' Class for emails which had undergone a UnicodeDecodingError.
+
+- Added a list for 'Error' objects, titled 'email_class.'
+
+- The time during which an email was filtered is now an attribute of both 'Email' and 'Error' objects.
