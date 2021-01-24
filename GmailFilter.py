@@ -12,11 +12,6 @@ from GmailApiModules.google_auth_oauthlib.flow import InstalledAppFlow
 from GmailApiModules.google.auth.transport.requests import Request
 
 
-'''from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request'''
-
-
 # Setting up lists, collections, and variables
 
 logging.basicConfig(filename="C:\\Users\\Xavier\\Documents\\GitHub\\GmailFilter\\Errors.Log", level=logging.ERROR)
