@@ -8,7 +8,7 @@ Can be used to do any action you want to any email after almost any given amount
 Keep in mind that this filter is a simple project, and is still in the works. It will grow more efficient and feature rich over time.
 
 
-========== - Version 1.1 - Public Release ==========
+========== - Version 1.1 - Public Release - ==========
 
 - Efficientcy slightly improved.
 
@@ -23,7 +23,7 @@ Keep in mind that this filter is a simple project, and is still in the works. It
 - Released publically.
 
 
-========== - Version 1.2 - Added Logging and Naming Scheme ==========
+========== - Version 1.2 - Added Logging and Naming Scheme - ==========
 
 - Added a naming scheme for objects created in the program according to the following list:
 
@@ -31,17 +31,42 @@ Lists: lowercase_with_underscores
 
 Dicts: lowercase_with_underscores + Dict
 
-Strings: initially-Lowercase-With-Hypens
-
 Classes: Capitalized
+
+Class Instances: initiallyLowercase
 
 Funcs: initiallyLowercase + Func
 
 
-- Added logging for errors, using the Error.log file.
+- Added logging for errors, using the Error.Log file.
 
 - Added the 'Error' Class for emails which had undergone a UnicodeDecodingError.
 
-- Added a list for 'Error' objects, titled 'email_class.'
+- Added a list for 'Error' objects, titled 'error_class.'
 
 - The time during which an email was filtered is now an attribute of both 'Email' and 'Error' objects.
+
+
+========== - Version 1.3 - Added Flexibility and Commenting - ==========
+
+- Changed and updated formatting
+
+- Converted the 'filterFunc' function into a 'Filter' class. The functionality of the filter itself is now much more flexable.
+
+- The code previously responsible for connecting to the Gmail servers has been condensed into the 'connectFunc' function.
+
+- 'Cut the fat' around a few smaller parts of the program.
+
+- Updated the names of a few parts of the program to better reflect their usage.
+
+- Now allows the user to much more easily change the URL given to the SCOPES variable, which in turn changes the permissions the program has when interacting with the
+Gmail servers.
+
+- Additionally includes a list of all possible modifiers for the SCOPES variable, and how they change the permissions of the program.
+
+- All modules taken from the Gmail API website and are vital for the useage of the program when connecting to and interacting with the Gmail servers have now been 
+condensed into a simple downloadable package. Now you don't have to go through the pain of using Pip and manually grabbing the files for the program to use 
+like I did!
+
+- Majorly increased the amount of comments present in the program. Essentially every part of the program, as well as how they interact with other parts of the program, is now 
+fully explained within the code itself.
