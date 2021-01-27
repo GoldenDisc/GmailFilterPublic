@@ -3,7 +3,7 @@ A basic email filter for Gmail.
 Has the ability to automatically star, trash, archive, flag, or read any email you want, as long as it's cotained within the Gmail messaging service.
 Can be used to do any action you want to any email after almost any given amount of time.
 
-GOOGLE DRIVE DOWNLOAD LINK FOR THE NEEDED GMAIL API PACKAGE: ***TO BE ADDED***
+GOOGLE DRIVE DOWNLOAD LINK FOR THE NEEDED GMAIL API PACKAGE: https://drive.google.com/drive/folders/1-2Do7odru5UwxFcEqmKPofTPWLhSwF3q
 
 
 ========== - Version 1.3 - Added Flexibility and Commenting - ==========
