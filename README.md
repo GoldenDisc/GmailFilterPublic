@@ -44,9 +44,9 @@ Dicts: lowercase_with_underscores + Dict
 
 Classes: Capitalized
 
-Class Instances: initiallyLowercase
+Class Instances: camelCase
 
-Funcs: initiallyLowercase + Func
+Funcs: camelCase + Func
 
 
 - Added logging for errors, using the Error.Log file.
