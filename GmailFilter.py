@@ -279,8 +279,8 @@ if __name__ == '__main__':    # The following execution of functions is placed a
 
     num = 1
 
-    for numb in range(0, 10**10):
+    while True:
 
         num = myFilter.mainFunc(num)    # The 'mainFunc' method is run every 15 minutes in order to effectively filter constantly throught the day.
 
-        time.sleep(900) # The amount of time between each iteration of this for loop is determined by the argument given to this 'sleep' function. The argument is an integer, and is the number of seconds during which the program is to remain inactive.
+        time.sleep(900)    # The amount of time between each iteration of this for loop is determined by the argument given to this 'sleep' function. The argument is an integer, and is the number of seconds during which the program is to remain inactive.
