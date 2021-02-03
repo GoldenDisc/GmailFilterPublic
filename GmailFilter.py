@@ -32,9 +32,9 @@ spam_class = []     # Optional to use, every filtered Email has an object create
 error_class = []     # Similar to the list above, but holds emails which caused an encoding error.
 
 
-time_Form = "%H:%M:%S"     # 'Form' is short for 'format,' shortened to prevent the program from running the "format" function. Show the time down to the hour.
+time_Form = "%H:%M:%S"     # 'Form' is short for 'format,' shortened to prevent the program from running the "format" function. Show the time up to the hour.
 
-full_Form = "%m/%d/%Y %H:%M:%S"     # See comment above. Shows the time down to the year.
+full_Form = "%m/%d/%Y %H:%M:%S"     # See comment above. Shows the time up to the year.
 
 
 MODIFIER = "modify"    # This string will be added to the end of the URL given to the SCOPES variable in order to more easily change the permissions of this program and its future variations.
@@ -58,7 +58,7 @@ settings.sharing | Allows the program to manage sensitive mail settings, such as
 
 def connectFunc(modifier):    # Connects to the Gmail servers and the user's Gmail account
 
-    SCOPES = [f'https://www.googleapis.com/auth/gmail.{modifier}']    # The URL shown to the user when the program is run for the first time, determines what Gmail account the program will interact with.
+    SCOPES = [f'https://www.googleapis.com/auth/gmail.{modifier}']    # The URL shown to the user when the program is run for the first time determines what Gmail account the program will interact with.
                                                                       # It should be noted that the program may be automatically detected as 'unsafe' by Google depending on which permissions were granted
                                                                       # by the modifier given to the 'SCOPES' variable. This can be manually overridden in order to allow the program to continue functioning.
     creds = None
@@ -86,7 +86,7 @@ def connectFunc(modifier):    # Connects to the Gmail servers and the user's Gma
     service = build('gmail', 'v1', credentials=creds)    # by the program.
 
 
-class Email:    # The class used to represent any email message which doesn't cause a UnicodeDecodingError
+class Email:    # The class used to represent any email message which doesn't cause a UnicodeEncodeError
 
     def __init__(self, details):
 
@@ -97,7 +97,7 @@ class Email:    # The class used to represent any email message which doesn't ca
         self.time = details['time']    # The 'time' key taken from the 'details' dictionary represents the time at which the email was filtered or starred.
 
 
-class Error:    # The class used to represent any email object which does cause a UnicodeDecodingError during the filtering process, these objects are used in the error logger.
+class Error:    # The class used to represent any email object which does cause a UnicodeEncodeError during the filtering process, these objects are used in the error logger.
 
     def __init__(self, address, time):
 
@@ -150,7 +150,7 @@ class Filter:    # A class used to create personalized filters
                 try:
                     spam_log.write(f"Filtered at {message_dataDict['time']}: From {message_dataDict['name']} with the address {message_dataDict['address']}, {message_dataDict['subject']}\n\n")
 
-                except UnicodeEncodeError:    # In the event that an email causes a UnicodeEncodingError while the message's details are being recorded on the 'Spam.txt' document:
+                except UnicodeEncodeError:    # In the event that an email causes a UnicodeEncodeError while the message's details are being recorded on the 'Spam.txt' document:
 
                     spam_log.write(f"Filtered, {message_dataDict['time']}: CRITICAL ENCODING ERROR!\n\n")    # A special message is written to the 'Spam.txt' document indicating that an error ocurred.
                     error_class.append(Error(message_dataDict['address'], message_dataDict['time']))    # In addition to the regular 'Email' object created to represent the message after it was filtered, an 'Error' object is created and added to a seperate list.
