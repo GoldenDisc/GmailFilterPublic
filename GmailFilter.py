@@ -12,7 +12,7 @@ from GmailApiModules.google_auth_oauthlib.flow import InstalledAppFlow
 from GmailApiModules.google.auth.transport.requests import Request
 
 
-# Setting up lists, collections, and variables
+# Creating basic lists, collections, and variables
 
 logging.basicConfig(filename="C:\\Users\\Xavier\\Documents\\GitHub\\GmailFilter\\Errors.Log", level=logging.ERROR)
 logger = logging.getLogger()
@@ -34,33 +34,40 @@ error_class = []     # Similar to the list above, but holds emails which caused 
 
 time_Form = "%H:%M:%S"     # 'Form' is short for 'format,' shortened to prevent the program from running the "format" function. Show the time up to the hour.
 
-full_Form = "%m/%d/%Y %H:%M:%S"     # See comment above. Shows the time up to the year.
-
-
-MODIFIER = "modify"    # This string will be added to the end of the URL given to the SCOPES variable in order to more easily change the permissions of this program and its future variations.
-
-"""
-List of valid 'MODIFIER' strings, and how they affect the program's permissions when interacting with Gmail directly.
-
-labels           | Allows the program to create, read, and delete the label's of individual emails.
-send             | Allows the program to send messages only, does not allow the program to modify or read messages.
-readonly         | Allows the program to read all resources and their metadata, blocks all writing operations
-compose          | Allows the program to create, read, update and delete drafts, as well as sending messages and drafts.
-insert           | Allows the program to insert and import messages exclusively
-modify           | Allows the program to perform all reading/writing operations, with the exception of permanent and immediate deletion of threads and messages.
-metadata         | Allows the program to read resources metadata, except for the content of message bodies and attachments.
-settings.basic   | Allows the program to manange basic mail settings.
-settings.sharing | Allows the program to manage sensitive mail settings, such as forwarding rules and aliases. Restricted to admin use
-"""
+full_Form = "%m/%d/%Y %H:%M:%S"     # See comment above. Shows the time up to the year. 
 
 
 # Defining key classes & functions
 
-def connectFunc(modifier):    # Connects to the Gmail servers and the user's Gmail account
+def connectFunc(modifier="modify"): 
+    """
+    Runs the main code used by the Gmail API to connect to the user's Gmail account.
 
-    SCOPES = [f'https://www.googleapis.com/auth/gmail.{modifier}']    # The URL shown to the user when the program is run for the first time determines what Gmail account the program will interact with.
-                                                                      # It should be noted that the program may be automatically detected as 'unsafe' by Google depending on which permissions were granted
-                                                                      # by the modifier given to the 'SCOPES' variable. This can be manually overridden in order to allow the program to continue functioning.
+    Arguments:
+        modifier (str, optional): A string given to the "SCOPES" variable, determines the permissions given to the program. See the chart listen in "Notes" for all valid
+        strings and the permissions they allow.
+
+    Notes:
+        When ran for the first time, the user will be directed to a URL printed in the console. This URL will allow the user to officially connect the script
+        to their Gmail account, but will be marked as an 'unsafe' link innitially, as this program is not officially verified by Google. 
+
+        Chart of all valid "modifier" values:
+
+            labels           | Allows the program to create, read, and delete the label's of individual emails.
+            send             | Allows the program to send messages only, does not allow the program to modify or read messages.
+            readonly         | Allows the program to read all resources and their metadata, blocks all writing operations
+            compose          | Allows the program to create, read, update and delete drafts, as well as sending messages and drafts.
+            insert           | Allows the program to insert and import messages exclusively
+            modify           | Allows the program to perform all reading/writing operations, with the exception of permanent and immediate deletion of threads and messages.
+            metadata         | Allows the program to read resources metadata, except for the content of message bodies and attachments.
+            settings.basic   | Allows the program to manange basic mail settings.
+            settings.sharing | Allows the program to manage sensitive mail settings, such as forwarding rules and aliases. Restricted to admin use.
+
+        This chart based on the offical Gmail API page: https://developers.google.com/gmail/api/auth/scopes 
+
+    """
+
+    SCOPES = [f'https://www.googleapis.com/auth/gmail.{modifier}']    
     creds = None
 
     if os.path.exists('token.pickle'):
@@ -86,7 +93,19 @@ def connectFunc(modifier):    # Connects to the Gmail servers and the user's Gma
     service = build('gmail', 'v1', credentials=creds)    # by the program.
 
 
-class Email:    # The class used to represent any email message which doesn't cause a UnicodeEncodeError
+class Email:
+    """
+    Stores information about a given email.
+
+    Arguments:
+        details (dict): A dictionary created by the program containing the email address, subject line, sender's name, and time of filtering or starring of the given email.
+
+    Notes:
+        Keys of the "details" dict: name, address, subject, time
+
+        Within the program, this class is used to store the info about emails that have been either archieved or starred. If the given email causes an error during either process,
+        an "ErrorEmail" object is created instead.
+    """
 
     def __init__(self, details):
 
@@ -94,10 +113,25 @@ class Email:    # The class used to represent any email message which doesn't ca
         self.name = details["name"]
         self.address = details["address"]
         self.subject = details["subject"]
-        self.time = details['time']    # The 'time' key taken from the 'details' dictionary represents the time at which the email was filtered or starred.
+        self.time = details['time']   
 
 
-class Error:    # The class used to represent any email object which does cause a UnicodeEncodeError during the filtering process, these objects are used in the error logger.
+class ErrorEmail:
+    """
+    Stores the information about emails which have caused an error during the filtering process. 
+
+    Arguments:
+        addess (str): The email address of the email responsible for the error.
+
+        time (str): The time the given email was filtered.
+
+    Notes:
+        Stores a rather limited amount of information when compared to the "Email" class, only storing the given emails address and time archived.
+
+        The error which causes these objects to be created is a "UnicodeEncodingError," caused when a filtered email contains certain special characters or emojis 
+        in its sender's name or subject line. When the script is writing this information to the "Spam.txt" file, this error is raised, and the limited amount of info given to 
+        this class is given to the file.
+    """
 
     def __init__(self, address, time):
 
@@ -153,7 +187,7 @@ class Filter:    # A class used to create personalized filters
                 except UnicodeEncodeError:    # In the event that an email causes a UnicodeEncodeError while the message's details are being recorded on the 'Spam.txt' document:
 
                     spam_log.write(f"Filtered, {message_dataDict['time']}: CRITICAL ENCODING ERROR!\n\n")    # A special message is written to the 'Spam.txt' document indicating that an error ocurred.
-                    error_class.append(Error(message_dataDict['address'], message_dataDict['time']))    # In addition to the regular 'Email' object created to represent the message after it was filtered, an 'Error' object is created and added to a seperate list.
+                    error_class.append(ErrorEmail(message_dataDict['address'], message_dataDict['time']))    # In addition to the regular 'Email' object created to represent the message after it was filtered, an 'Error' object is created and added to a seperate list.
                     logging.error(f"{message_dataDict['time']} - Critical encoding error, filtered, {message_dataDict['address']}")    # Finally, a message is sent to the 'Errors.Log' logging document indicating with which emails the error ocurred and when.
 
 
@@ -170,7 +204,7 @@ class Filter:    # A class used to create personalized filters
 
                 except UnicodeEncodeError:
                     spam_log.write(f"Starred, {message_dataDict['time']}: CRITICAL ENCODING ERROR!\n\n")
-                    error_class.append(Error(message_dataDict))
+                    error_class.append(ErrorEmail(message_dataDict))
                     logging.error(f"{message_dataDict['time']} - Critical encoding error, starred, {message_dataDict['address'], message_dataDict['time']}")
 
 
@@ -270,7 +304,7 @@ if __name__ == '__main__':    # The following execution of functions is placed a
     with open("Spam.txt", "a") as spam_log:
         spam_log.write(f"\n======== - {datetime.now().strftime(full_Form)} - START OF LOG - ========\n\n")    # Whenever the program is run at all, this message is added to the text log. This shows the full date rather than just the time it was executed.
 
-    connectFunc(MODIFIER)
+    connectFunc()
 
     myFilter = Filter(spam_list, spam_name, star_list, star_name)    # The filter object is created, and the preset lists containing all the major filtering/starring information is sent to the class for this instance to be created.
 
