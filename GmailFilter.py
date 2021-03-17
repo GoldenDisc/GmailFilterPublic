@@ -42,15 +42,16 @@ full_Form = "%m/%d/%Y %H:%M:%S"     # See comment above. Shows the time up to th
 def connectFunc(modifier="modify"): 
     """
     Runs the main code used by the Gmail API to connect to the user's Gmail account.
-
     Arguments:
+
         modifier (str, optional): A string given to the "SCOPES" variable, determines the permissions given to the program. See the chart listen in "Notes" for all valid
+
         strings and the permissions they allow.
 
     Notes:
+
         When ran for the first time, the user will be directed to a URL printed in the console. This URL will allow the user to officially connect the script
         to their Gmail account, but will be marked as an 'unsafe' link innitially, as this program is not officially verified by Google. 
-
         Chart of all valid "modifier" values:
 
             labels           | Allows the program to create, read, and delete the label's of individual emails.
@@ -62,9 +63,8 @@ def connectFunc(modifier="modify"):
             metadata         | Allows the program to read resources metadata, except for the content of message bodies and attachments.
             settings.basic   | Allows the program to manange basic mail settings.
             settings.sharing | Allows the program to manage sensitive mail settings, such as forwarding rules and aliases. Restricted to admin use.
-
+            
         This chart based on the offical Gmail API page: https://developers.google.com/gmail/api/auth/scopes 
-
     """
 
     SCOPES = [f'https://www.googleapis.com/auth/gmail.{modifier}']    
@@ -97,10 +97,12 @@ class Email:
     """
     Stores information about a given email.
 
-    Arguments:
+    Variables:
+
         details (dict): A dictionary created by the program containing the email address, subject line, sender's name, and time of filtering or starring of the given email.
 
     Notes:
+
         Keys of the "details" dict: name, address, subject, time
 
         Within the program, this class is used to store the info about emails that have been either archieved or starred. If the given email causes an error during either process,
@@ -120,12 +122,13 @@ class ErrorEmail:
     """
     Stores the information about emails which have caused an error during the filtering process. 
 
-    Arguments:
-        addess (str): The email address of the email responsible for the error.
+    Variables:
 
+        address (str): The email address of the email responsible for the error.
         time (str): The time the given email was filtered.
 
     Notes:
+
         Stores a rather limited amount of information when compared to the "Email" class, only storing the given emails address and time archived.
 
         The error which causes these objects to be created is a "UnicodeEncodingError," caused when a filtered email contains certain special characters or emojis 
@@ -133,70 +136,125 @@ class ErrorEmail:
         this class is given to the file.
     """
 
-    def __init__(self, address, time):
+    def __init__(self, err_details):
 
-        self.address = address
-        self.time = time
+        self.address = err_details["address"]
+        self.time = err_details["time"]
 
 
-def counterFunc(name_set, compare_set):    # A function which intakes 2 lists, 'compare_set' being a list of basic names/addresses to act as a benchmark, such as the 'spam_list' list, and 'name_set' being the list of actual Email/Error objects to compare, such as the 'spam_class' list.
+def counterFunc(name_arr, compare_arr):
+    """
+    Counts the number of times an Email or ErrorEmail object in a list appears that holds specific 'address' variable from a list of email addresses.
 
-    count_dataDict = {}    # A dictionary which has each email address from 'name_set' as a key and the number of times an object with a matching email appears in 'compare_set' as said key's paired value.
+    Arguments:
+        name_arr (list): A list of Email or ErrorEmail objects to have their '.address' variables compared to a list of email address strings.
 
-    for address in compare_set:
+        compare_arr (list): The "list of email address strings" mentioned above. Contains the strings of every email address to have Email or 
+        ErrorEmail objects compared against.
 
-        count = []    # A temporary list including every Email/Error object which has a specific email address for the purpose of directly counting the number of said objects.
+    Returns:
+        count_dataDict (dict): A dictionary with every email address given in the "compare_arr" argument as each key, and the number of times an Email or
+        ErrorEmail object within the "name_arr" argument had the same address as their ".address" attribute as the paired value, specifically stored 
+        as an integer. Note that email addresses with no matching emails found will not have an entry in thos dictionary.
+
+    Nores:
+    
+        TIME COMPLEXITY:
+
+            Note that this function is inefficient on large scales, as the time complexity is O(n*l), where n is equivalent to the first argument, and the l to 
+            the second.
+    """
+
+    count_dataDict = {}   
+
+    for address in compare_arr:
+
+        count = []
 
         for item in name_set:
             
-            if item.address == address:
-                count.append(item)    # Any Email/Error object with the specific address used in this iteration of the for loop will be added to this iteration's 'count' list.
+            try:
+                item.address == address
+                count.append(item)
 
-        if len(count) > 0:    # If the number of Email/Error objects in the 'count' list is greater than 0:
-            count_dataDict[address] = len(count)    # A new entry in the 'count_dataDict' dictionary is created.
+            except AttributeError:
+                pass   
 
-    for key in count_dataDict:
+        if len(count) > 0:    
+            count_dataDict[address] = len(count)
 
-        print(f"{key}: {count_dataDict[key]}\n")    # Lastly, the function will print out every email address/name provided in the 'name_set' alongside the number of times an object matching said address/name was present in the 'compare_set' list in the console.
+    return count_dataDict
 
 
-class Filter:    # A class used to create personalized filters
+class Filter:
+    """
+    Contains all of the information and methods used to filter one's Gmail inbox. Has the ability to function of automatically archiving and starring Emails.
+
+    Variables:
+        filtered_list (list): A list of email adresses, emails from senders with these email addresses will be archived automatically.
+
+        filtered_name (list): A list of email names, emails from senders with these names will be archived.
+
+        starred list (list): A list of email adresses, emails from senders with these email addresses will be starred and left unread.
+
+        starred_name (list): A list of email names, emails from senders with these names will be starred and left unread.
+
+    Methods:
+        filterFunc(self, message, message_dataDict)
+
+        analyzeDataFunc(message)   STATIC METHOD
+
+        mainFunc(self, num)
+    """
 
     def __init__(self, filtered_list, filtered_name, starred_list, starred_name):
 
-        self.filtered_list = filtered_list    # A list of email adresses, emails from senders with these email addresses will be archived 
-        self.filtered_name = filtered_name    # A list of email names, emails from senders with these names will be archived
+        self.filtered_list = filtered_list
+        self.filtered_name = filtered_name
 
-        self.starred_list = starred_list    # A list of email adresses, emails from senders with these email addresses will be starred and left unread 
-        self.starred_name = starred_name    # A list of email names, emails from senders with these names will be starred and left unread 
+        self.starred_list = starred_list
+        self.starred_name = starred_name
 
 
-    def filterFunc(self, message, message_dataDict):    # When presented with an individual email will check if it matches a specific list of sender's names and addresses, then automatically archives the message accordingly
+    def filterFunc(self, message, message_dataDict):
+        """
+        When presented with an individual email will check if it matches a specific list of sender's names and addresses, then automatically archives or stars the message accordingly.
+
+        Arguments:
+            message: The ID which refers to a specific email in the user's inbox. Used in the Gmail API code written by Google, data type unkown. 
+
+            message_dataDict (dict): A dictionary containing the specific details used to categorize filtered emails. Will always contain at least an email address marked with the 
+            "address" key. Is meant to be recieved from the "analyzedDataFunc" method.
+        """
+
         if message_dataDict['address'] in self.filtered_list or message_dataDict['name'] in self.filtered_name:
+
             service.users().messages().modify(userId="me", id=message["id"], body={"removeLabelIds": ["INBOX"]}).execute()
             service.users().messages().modify(userId="me", id=message["id"], body={"removeLabelIds": ["UNREAD"]}).execute()
 
-            message_dataDict['time'] = datetime.now().strftime(time_Form)    # Defines the time at which the message was archived
+            message_dataDict['time'] = datetime.now().strftime(time_Form)   
 
-            spam_class.append(Email(message_dataDict))    # Creates the individual Email object for this message, then adds it to a list of filtered messages
+            spam_class.append(Email(message_dataDict))    
 
-            with open("Spam.txt", "a") as spam_log:    # Records all the details of the filtered message as well as when it was filtered on a seperate text document, 'Spam.txt'
+            with open("Spam.txt", "a") as spam_log:    
                 try:
                     spam_log.write(f"Filtered at {message_dataDict['time']}: From {message_dataDict['name']} with the address {message_dataDict['address']}, {message_dataDict['subject']}\n\n")
 
-                except UnicodeEncodeError:    # In the event that an email causes a UnicodeEncodeError while the message's details are being recorded on the 'Spam.txt' document:
+                except UnicodeEncodeError: 
 
-                    spam_log.write(f"Filtered, {message_dataDict['time']}: CRITICAL ENCODING ERROR!\n\n")    # A special message is written to the 'Spam.txt' document indicating that an error ocurred.
-                    error_class.append(ErrorEmail(message_dataDict['address'], message_dataDict['time']))    # In addition to the regular 'Email' object created to represent the message after it was filtered, an 'Error' object is created and added to a seperate list.
-                    logging.error(f"{message_dataDict['time']} - Critical encoding error, filtered, {message_dataDict['address']}")    # Finally, a message is sent to the 'Errors.Log' logging document indicating with which emails the error ocurred and when.
+                    spam_log.write(f"Filtered, {message_dataDict['time']}, {message_dataDict["address"]}: CRITICAL ENCODING ERROR!\n\n")  
+
+                    error_class.append(ErrorEmail(message_dataDict))
+                    logging.error(f"{message_dataDict['time']} - Critical encoding error, filtered, {message_dataDict['address']}")  
 
 
-        elif message_dataDict['address'] in self.starred_list or message_dataDict['name'] in self.starred_name:    # The process above is repeated, however emails matching the criteria are starred rather than archived.
+        elif message_dataDict['address'] in self.starred_list or message_dataDict['name'] in self.starred_name:    
             service.users().messages().modify(userId="me", id=message["id"], body={"addLabelIds": ["STARRED"]}).execute()
 
             message_dataDict['time'] = datetime.now().strftime(time_Form)
 
-            # In addition to the note above, starred emails do not have objects created to represent them, nor will they be recorded in a document unless they cause an Error.
+            # Starred emails do not have objects created to represent them, nor will they be recorded in a text document. This is with the exception that the 
+            # email in question raises a UnicodeEncodeError, in which case an ErrorEmail object will be createdm and the error will be logged.
 
             with open("Spam.txt", "a") as spam_log:
                 try:
@@ -204,43 +262,62 @@ class Filter:    # A class used to create personalized filters
 
                 except UnicodeEncodeError:
                     spam_log.write(f"Starred, {message_dataDict['time']}: CRITICAL ENCODING ERROR!\n\n")
+
                     error_class.append(ErrorEmail(message_dataDict))
                     logging.error(f"{message_dataDict['time']} - Critical encoding error, starred, {message_dataDict['address'], message_dataDict['time']}")
 
 
     @staticmethod
-    def analyzeDataFunc(message):    # A static method that records and summerizes the address, sender name, and subject of an Email
+    def analyzeDataFunc(message):
+        """
+        A static method that records and summerizes the address, sender name, and subject of an individual Email in the form of a dictionary.
 
-        email_data = service.users().messages().get(userId="me", id=message["id"]).execute()["payload"]["headers"]    # Email data is retrieved from the server for the individual message.
+        Arguments:
+            message: The ID which refers to a specific email in the user's inbox. Used in the Gmail API code written by Google, data type unkown. The very same "message"
+            variable used in the "filterFunc" method.
 
-        dataDict = {}    # A dictionary that records the details of the message, which is then returned
+        Returns:
+            dict: The dictionary mentioned in the description whichholds the categorized information about the emails. 
 
+        Notes:
+            The keys of the returned dictionary are: 
 
-        for values in email_data:    # Parces the data of the message. If certain peices of data are found, they are further broken down and recorded by the program in the following code.
+            "address"
+            "name"
+            "subject"
+
+            Each hold the email's from address, sender's name, and subject line, in that order.
+        """
+
+        email_data = service.users().messages().get(userId="me", id=message["id"]).execute()["payload"]["headers"]  
+
+        dataDict = {}    
+
+        for values in email_data:   
             name = values["name"]
 
             if name == "From":
 
-                from_details = values["value"].split()    # The string consisting of the 'From' data of the email is split into an easily parced list.
+                from_details = values["value"].split()    
 
 
                 try:
-                    dataDict['address'] = from_details[-1]    # The very last item of this list is the sender's email address, which is then assigned to the 'address'  key in the 'dataDict' dictionary.
+                    dataDict['address'] = from_details[-1]    
 
-                except UnicodeEncodeError:    # In the event that encoding the address value produces an error, a replacement value is given indicating an error ocurred, and the error is logged. The same occurs with all other encoded values.
+                except UnicodeEncodeError:   
                     dataDict['address'] = "MESSAGE ENCODING ERROR"
                     logging.error(f"{datetime.now().strftime(time_Form)} - Encoding error, address")
 
 
                 try:
-                    dataDict['name'] = "".join(from_details[0:-1])    # All other items of the 'from_details' list are combined and recorded as the 'name' key in the 'dataDict' dictionary.
+                    dataDict['name'] = "".join(from_details[0:-1])    
 
                 except UnicodeEncodeError:
                     dataDict['name'] = "MESSAGE ENCODING ERROR"
                     logging.error(f"{datetime.now().strftime(time_Form)} - Encoding error, name")
 
                     
-            elif name == "Subject":    # The 'Subject' data is directly recorded as the 'subject' key in the 'dataDict' dictionary.
+            elif name == "Subject":    
 
                 try:
                     subject = values["value"]
@@ -255,16 +332,24 @@ class Filter:    # A class used to create personalized filters
         return dataDict    
 
 
-    def mainFunc(self, num):    # The main promary action taken by the filter, coordinates all the other disconnected parts of the filter.
+    def mainFunc(self, num):
+        """
+        Executes the main related methods of the "Email" class and logs the times the inbox was checked and filtered.
 
-        messages = service.users().messages().list(userId='me', labelIds=["INBOX"], q="is:unread").execute().get('messages', [])    # A list of all unread messages within the user's inbox are represented as this iterable.
+        Arguments:
+            num (int): An integer used to mark the number of times the method has been run, used exclusively in the logging of the process the program is executing.
 
+        Notes:
+            This method essentially gathers the user's inbox info, logs the number of times it's been run, then runs the "filterFunc" method if there are unread messages
+            in the inbox. The "filterFunc" method recieves the returned value "analyzeDataFunc" as its second argument.
+        """
 
-        with open("Spam.txt", "a") as spam_log:    # The time in which the filter function is run is recorded in the 'Spam.txt' log
+        messages = service.users().messages().list(userId='me', labelIds=["INBOX"], q="is:unread").execute().get('messages', [])
+
+        with open("Spam.txt", "a") as spam_log:    
             spam_log.write(f"===== - Check {num} - {datetime.now().strftime(time_Form)} - =====\n\n")
 
-        num += 1    # This 'num' integer is simply used to show how many cycles of filtering every 15 have passed in the text log.
-
+        num += 1 
 
         if not messages:
             pass
@@ -272,15 +357,21 @@ class Filter:    # A class used to create personalized filters
         else:
 
             for message in messages:
-                self.filterFunc(message, self.analyzeDataFunc(message))    # The 'filterFunc' method is run, with the output of the 'analyzeDataFunc' as its 'message_dataDict' input. This is done for every message in the 'messages' list.
+                self.filterFunc(message, self.analyzeDataFunc(message))
             
         return num
 
 
-def nukeFunc():    # This is a completely optional and currently unused function which comepletely wipes the contents of a user's inbox. Was mostly created for shits and giggles.
+def nukeFunc():
+    """
+    Completely deletes every single email in the user's inbox without checking the message's content or email address. A joke function, not recommended for serious usage.
+
+    Notes:
+        Does serve a pratical use, but does so with reckless abandon. Content is sent to the trash and will be permanently deleted, no matter the contents of the emails
+        it's deleting. DO NOT USE LIGHTLY.
+    """
 
     messages = service.users().messages().list(userId='me', labelIds=["INBOX"], q="is:unread").execute().get('messages', [])
-
 
     with open("Spam.txt", "a") as spam_log:
         spam_log.write(f"===== - TACTICAL NUKE, INCOMING! - {datetime.now().strftime(full_Form)}  - =====\n\n")
@@ -299,14 +390,14 @@ def nukeFunc():    # This is a completely optional and currently unused function
 
 # Basic Setup for Primary Functions
 
-if __name__ == '__main__':    # The following execution of functions is placed after this statement in order to prevent the program from connecting to the Gmail server's and begin filtering emails when imported into other programs.
+if __name__ == '__main__':
 
     with open("Spam.txt", "a") as spam_log:
-        spam_log.write(f"\n======== - {datetime.now().strftime(full_Form)} - START OF LOG - ========\n\n")    # Whenever the program is run at all, this message is added to the text log. This shows the full date rather than just the time it was executed.
+        spam_log.write(f"\n======== - {datetime.now().strftime(full_Form)} - START OF LOG - ========\n\n")    
 
     connectFunc()
 
-    myFilter = Filter(spam_list, spam_name, star_list, star_name)    # The filter object is created, and the preset lists containing all the major filtering/starring information is sent to the class for this instance to be created.
+    myFilter = Filter(spam_list, spam_name, star_list, star_name) 
 
 
 # Execution of the key function(s)
@@ -315,6 +406,7 @@ if __name__ == '__main__':    # The following execution of functions is placed a
 
     while True:
 
-        num = myFilter.mainFunc(num)    # The 'mainFunc' method is run every 15 minutes in order to effectively filter constantly throught the day.
+        num = myFilter.mainFunc(num)
 
-        time.sleep(900)    # The amount of time between each iteration of this for loop is determined by the argument given to this 'sleep' function. The argument is an integer, and is the number of seconds during which the program is to remain inactive.
+        time.sleep(900)
+
